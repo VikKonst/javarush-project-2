@@ -1,56 +1,65 @@
 package com.javarush.island.game;
 
 import com.javarush.island.gameobjects.GameField;
+import com.javarush.island.services.AppService;
 import com.javarush.island.services.GameService;
-import com.javarush.island.services.Statistics;
+import com.javarush.island.services.StatisticsService;
 
 public class Game {
-    private final GameField gameField;
+    private final AppService appService;
     private final GameService gameService;
+    private final StatisticsService statisticsService;
 
-    public Game() {
-        this.gameField = GameField.getInstance();
-        this.gameService = GameService.getInstance();
+    public Game(AppService appService, GameService gameService, StatisticsService statisticsService) {
+        this.appService = appService;
+        this.gameService = gameService;
+        this.statisticsService = statisticsService;
     }
 
     public void startGame() {
         initializeGameField();
-//        this.gameField.checkForFilling();
         for (int i = 0; i < 3; i++) {
             animalsDoTheirActions();
+            getCurrentAmountOfDiedObjects();
             removeDeadGameObjects();
             plantsDoTheirActions();
-            getStatistics();
+            getCurrentAmountOfObjectsOnField();
         }
-
-//        while (gameService.isAnimalsExist()) {
-//        }
     }
 
     public void initializeGameField() {
-        gameField.createGameField();
+        GameField gameField = GameField.getInstance();
+        int height = appService.getIntProperty("gameField.height");
+        int width = appService.getIntProperty("gameField.width");
+        gameField.createGameField(height, width);
+        gameService.fillFieldsWithAnimals();
+        gameService.fillFieldsWithPlants();
+        System.out.println("animals created");
+
     }
 
     public void animalsDoTheirActions() {
-//        System.out.println("++++++++++++++++++Animals do their actions++++++++++++++");
         gameService.doAction();
-//        gameField.checkForFilling();
     }
 
     public void plantsDoTheirActions() {
-//        System.out.println("++++++++++++++++++Plants do their actions++++++++++++++");
-        gameField.setPlantsOnGameField();
-//        gameField.checkForFilling();
+        gameService.fillFieldsWithPlants();
     }
 
     public void removeDeadGameObjects() {
         gameService.refreshGameField();
-//        gameField.checkForFilling();
     }
 
     public void getStatistics() {
-        Statistics statistics = new Statistics();
-        statistics.getCurrentAmountOfObjects();
+        statisticsService.getCurrentAmountOfObjects();
+    }
+
+    public void getCurrentAmountOfObjectsOnField() {
+        statisticsService.getCurrentAmountOfObjects();
+    }
+
+    public void getCurrentAmountOfDiedObjects() {
+        statisticsService.getCurrentAmountOfDeadObjects();
     }
 
 }

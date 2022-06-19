@@ -2,19 +2,15 @@ package com.javarush.island.gameobjects;
 
 import com.javarush.island.species.animals.abstractItems.Animal;
 import com.javarush.island.services.GameService;
-import com.javarush.island.species.animals.animalService.AnimalFactory;
 import com.javarush.island.species.plants.Plant;
 
 import java.util.*;
 
 public class GameField {
     private static final GameField INSTANCE = new GameField();
-    private static final int HEIGHT = 100;
-    private static final int WIDTH = 20;
-    private static final int MAX_AMOUNT_OF_ANIMALS_IN_CELL = 2345;
-    private static final int MAX_AMOUNT_OF_PLANTS_IN_CELL = 200;
-    private GameService gameService;
-    private HashMap<Position, ArrayList<GameObject>> gameFieldCellsMap;
+    public static final int MAX_AMOUNT_OF_ANIMALS_IN_CELL = 2345;
+    public static final int MAX_AMOUNT_OF_PLANTS_IN_CELL = 200;
+    private List<Cell> fieldCells = new ArrayList<>();
 
     private GameField() {
 
@@ -24,51 +20,52 @@ public class GameField {
         return INSTANCE;
     }
 
-    public void createGameField() {
-        gameService = GameService.getInstance();
-        gameFieldCellsMap = new HashMap<>();
-        for (int i = 0; i < HEIGHT; i++) {
-            for (int j = 0; j < WIDTH; j++) {
-                gameFieldCellsMap.put(new Position(i, j), new ArrayList<>());
-            }
-        }
-        setAnimalsOnGameField();
-        setPlantsOnGameField();
-    }
-
-    public void setAnimalsOnGameField() {
-        AnimalFactory animalFactory = new AnimalFactory();
-        Set<Map.Entry<Position, ArrayList<GameObject>>> set = gameFieldCellsMap.entrySet();
-        for (Map.Entry<Position, ArrayList<GameObject>> cell : set) {
-            for (int i = 0; i < new Random().nextInt(MAX_AMOUNT_OF_ANIMALS_IN_CELL); i++) {
-                Animal animal = animalFactory.createRandomAnimal();
-                if (gameService.canGameObjectBeOnField(animal, cell.getValue())) {
-                    cell.getValue().add(animal);
-                }
+    public void createGameField(int height, int width) {
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                Cell cell = new Cell(i, j);
+                this.fieldCells.add(cell);
             }
         }
     }
 
-    public void setPlantsOnGameField() {
-        Set<Map.Entry<Position, ArrayList<GameObject>>> set = gameFieldCellsMap.entrySet();
-        for (Map.Entry<Position, ArrayList<GameObject>> cell : set) {
-            for (int i = 0; i < new Random().nextInt(MAX_AMOUNT_OF_PLANTS_IN_CELL); i++) {
-                Plant plant = new Plant(1, 200);
-                if (gameService.canGameObjectBeOnField(plant, cell.getValue())) {
-                    cell.getValue().add(plant);
-                }
-            }
+    public List<GameObject> getGameObjectsOnCell(Cell cell) {
+        Cell resultCell = this.fieldCells.stream().filter(c -> c.equals(cell)).findFirst().orElse(null);
+        if (resultCell != null) {
+            return resultCell.getObjectsOnCell();
         }
+        return null;
     }
 
-
-    public HashMap<Position, ArrayList<GameObject>> getGameFieldCellsMap() {
-        return gameFieldCellsMap;
+    public List<GameObject> getGameObjectsOnCellViaPosition(Position position) {
+        Cell resultCell = this.fieldCells.stream().filter(c -> c.getPosition().equals(position)).findFirst().orElse(null);
+        if (resultCell != null) {
+            return resultCell.getObjectsOnCell();
+        }
+        return null;
     }
 
-    public void setGameFieldCellsMap(HashMap<Position, ArrayList<GameObject>> gameFieldCellsMap) {
-        this.gameFieldCellsMap = gameFieldCellsMap;
+    public List<Cell> getFieldCells() {
+        return fieldCells;
     }
+
+    public Cell getCellByPosition(Position position) {
+        return this.fieldCells.stream().filter(c -> c.getPosition().equals(position)).findFirst().orElse(null);
+    }
+
+    public void setCells(List<Cell> cells) {
+        this.fieldCells = cells;
+    }
+
+//
+//
+//    public HashMap<Position, ArrayList<GameObject>> getGameFieldCellsMap() {
+//        return gameFieldCellsMap;
+//    }
+//
+//    public void setGameFieldCellsMap(HashMap<Position, ArrayList<GameObject>> gameFieldCellsMap) {
+//        this.gameFieldCellsMap = gameFieldCellsMap;
+//    }
 
 
     //    public void checkForFilling() {

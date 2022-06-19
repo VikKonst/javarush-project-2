@@ -1,19 +1,56 @@
-package com.javarush.island.species.animals.animalService;
+package com.javarush.island.services;
 
+import com.javarush.island.annotations.Injectable;
 import com.javarush.island.gameobjects.GameField;
 import com.javarush.island.gameobjects.GameObject;
 import com.javarush.island.gameobjects.Position;
-import com.javarush.island.services.GameService;
-import com.javarush.island.services.AppService;
 import com.javarush.island.species.animals.abstractItems.Animal;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+;
 
+@Injectable
 public class AnimalService {
+    private final AppService appService;
+
+    public AnimalService(AppService appService) {
+        this.appService = appService;
+    }
+
+    public Animal createRandomAnimal() {
+        List<Class<? extends Animal>> allClassesExtendingAnimal = appService.getAllClassesExtendingAnimal();
+        return createAnimal(allClassesExtendingAnimal.get(new Random().nextInt(allClassesExtendingAnimal.size())));
+    }
+
+    public Map<String, Object> getParams(Class<? extends Animal> clazz) {
+        String className = clazz.getSimpleName();
+        Map<String, Object> params = new HashMap<>();
+        params.put("weight", appService.getDblProperty(className + ".weight"));
+        params.put("maxTravelSpeed", appService.getIntProperty(className + ".maxTravelSpeed"));
+        params.put("minKilosForSaturation", appService.getDblProperty(className + ".minKilosForSaturation"));
+        params.put("maxItemsPerCell", appService.getIntProperty(className + ".maxItemsPerCell"));
+        return params;
+    }
+
+    public <T extends Animal> T createAnimal(Class<T> clazz) {
+        Constructor<?> constructor = null;
+        Object result = null;
+        for (Constructor<?> construct: clazz.getConstructors()) {
+            if (construct.getParameterTypes().length == 1 && construct.getParameterTypes()[0].equals(Map.class)) {
+                constructor = construct;
+                break;
+            }
+        }
+        if (constructor != null) {
+            try {
+                result = constructor.newInstance(getParams(clazz));
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return clazz.cast(result);
+    }
 
     public void move(Animal animal, Position currentPosition) {
         for (int i = 0; i <= new Random().nextInt(animal.getMaxTravelSpeed()); i++) {
@@ -21,14 +58,10 @@ public class AnimalService {
             if (!(newPosition.equals(currentPosition))) {
                 moveAnimalToNewPosition(currentPosition, newPosition, animal);
             }
-            // else {
-            //System.out.println("Animal decided to stay at current position " + currentPosition.getCoordinates());
-            //}
         }
     }
 
     public Position chooseDirection(Animal animal, Position currentPosition) {
-        //System.out.println("Choose direction for Animal " + animal.toString());
         boolean isPositionRelevant = false;
         Position newPosition = null;
         List<Position> randomlyChosenPositions = new ArrayList<>();
@@ -63,20 +96,26 @@ public class AnimalService {
     public boolean isPositionExist(Position currentPosition, Position newPosition) {
         if (currentPosition.equals(newPosition)) {
             return true;
-        }
-
-        return GameField.getInstance().getGameFieldCellsMap().containsKey(newPosition);
+        } else return GameField.getInstance().getCellByPosition(newPosition) != null;
     }
 
     private void moveAnimalToNewPosition(Position currentPosition, Position newPosition, Animal animal) {
-        GameField.getInstance().getGameFieldCellsMap().get(currentPosition).remove(animal);
-        GameField.getInstance().getGameFieldCellsMap().get(newPosition).add(animal);
-
-        //System.out.println("Animal " + animal + " moving from old Position " + currentPosition.getCoordinates() +  " to new Position " + newPosition.getCoordinates());
+        GameField.getInstance().getGameObjectsOnCellViaPosition(currentPosition).remove(animal);
+        GameField.getInstance().getGameObjectsOnCellViaPosition(newPosition).add(animal);
     }
 
     private boolean canAnimalBePlacedOnField(Animal animal, Position newPosition) {
-        return GameService.getInstance().canGameObjectBeOnField(animal, GameField.getInstance().getGameFieldCellsMap().get(newPosition));
+        return canGameObjectBeOnField(animal, GameField.getInstance().getGameObjectsOnCellViaPosition(newPosition));
+    }
+
+    public boolean canGameObjectBeOnField(GameObject gameObject, List<GameObject> gameObjects) {
+        int count = 0;
+        for (GameObject gameObjTmp : gameObjects) {
+            if (!gameObjTmp.getIsDead() && gameObject.getClass().equals(gameObjTmp.getClass())) {
+                count++;
+            }
+        }
+        return count < gameObject.getMaxItemsPerCell();
     }
 
     public void eat(Animal animal, List<GameObject> gameObjects) {
@@ -85,16 +124,13 @@ public class AnimalService {
         int attemptsToHunt = 3; //only 3 attempts are given for hunting, if no prey is found then animal stays hungry
         while (attemptsToHunt > 0) {
             int randomForChoosingPrey = new Random().nextInt(gameObjects.size());
-            //System.out.println("possibility to eat " + possibility);
             prey = gameObjects.get(randomForChoosingPrey);
-            //System.out.println("Animal " + animal.getClass().getSimpleName() + " try to eat " + prey.getClass().getSimpleName());
-            possibility = AppService.getIntProperty(animal.getClass().getSimpleName() + ".canEat." + prey.getClass().getSimpleName());
+            possibility = appService.getIntProperty(animal.getClass().getSimpleName() + ".canEat." + prey.getClass().getSimpleName());
             if (possibility > 0)
                 break;
             attemptsToHunt--;
         }
         if (canEat(possibility)) {
-            //System.out.println("Animal " + animal.getClass().getSimpleName() + " is eating " + prey.getClass().getSimpleName());
             prey.setIsDead(true);
             animal.setKilosEaten(prey.getWeight());
             if (animal.getKilosEaten() < animal.getMinKilosForSaturation()) {
@@ -103,7 +139,6 @@ public class AnimalService {
                 animal.setDaysWithoutFood(0);
             }
         } else {
-            //System.out.println("Animal " + animal.getClass().getSimpleName() + " is not eating " + prey.getClass().getSimpleName());
             animal.setDaysWithoutFood(animal.getDaysWithoutFood() + 1);
         }
     }
@@ -121,30 +156,10 @@ public class AnimalService {
         int randomForChoosingPartner = new Random().nextInt(gameObjects.size());
         GameObject partner = gameObjects.get(randomForChoosingPartner);
         if (!partner.getIsDead() && partner.getClass().equals(animal.getClass())) {
-            newBornAnimal = createNewBornAnimal(animalClass);
-            if (newBornAnimal != null && GameService.getInstance().canGameObjectBeOnField(newBornAnimal, gameObjects)) {
-                GameField.getInstance().getGameFieldCellsMap().get(currentPosition).add(newBornAnimal);
-                //System.out.println("New born " + animal.getClass().getSimpleName() + " appeared on position " + currentPosition.getCoordinates());
-            } else {
-                //System.out.println("***************new born animal can not be on field");
+            newBornAnimal = createAnimal(animalClass);
+            if (newBornAnimal != null && canGameObjectBeOnField(newBornAnimal, gameObjects)) {
+                GameField.getInstance().getGameObjectsOnCellViaPosition(currentPosition).add(newBornAnimal);
             }
-        } else {
-            //System.out.println("****************partner is dead or another class");
-
         }
-    }
-
-    private <T extends Animal> T createNewBornAnimal(Class<T> clazz) {
-        Constructor<?> constructor = clazz.getConstructors()[1];
-        Object instance = null;
-        try {
-            instance = constructor.newInstance(new AnimalFactory().getParams(clazz));
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-        }
-        if (instance != null) {
-            return clazz.cast(instance);
-        }
-        return null;
     }
 }

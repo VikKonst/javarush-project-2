@@ -3,9 +3,9 @@ package com.javarush.island.gameobjects;
 import java.util.Objects;
 
 public class Position {
-    private String coordinates;
-    private int coordinateX;
-    private int coordinateY;
+    private final String coordinates;
+    private final int coordinateX;
+    private final int coordinateY;
 
     public Position(int coordinateX, int coordinateY) {
         this.coordinateX = coordinateX;
