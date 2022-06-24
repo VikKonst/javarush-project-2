@@ -18,6 +18,7 @@ public class Game {
 
     public void startGame() {
         initializeGameField();
+        //this cycle will be replaced, the game shall continue until all animals are dead or until user wants to stop
         for (int i = 0; i < 3; i++) {
             animalsDoTheirActions();
             getCurrentAmountOfDiedObjects();
@@ -48,10 +49,6 @@ public class Game {
 
     public void removeDeadGameObjects() {
         gameService.refreshGameField();
-    }
-
-    public void getStatistics() {
-        statisticsService.getCurrentAmountOfObjects();
     }
 
     public void getCurrentAmountOfObjectsOnField() {

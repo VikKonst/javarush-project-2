@@ -5,10 +5,10 @@ import com.javarush.island.gameobjects.GameField;
 import com.javarush.island.gameobjects.GameObject;
 import com.javarush.island.gameobjects.Position;
 import com.javarush.island.species.animals.abstractItems.Animal;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-;
 
 @Injectable
 public class AnimalService {
@@ -36,7 +36,7 @@ public class AnimalService {
     public <T extends Animal> T createAnimal(Class<T> clazz) {
         Constructor<?> constructor = null;
         Object result = null;
-        for (Constructor<?> construct: clazz.getConstructors()) {
+        for (Constructor<?> construct : clazz.getConstructors()) {
             if (construct.getParameterTypes().length == 1 && construct.getParameterTypes()[0].equals(Map.class)) {
                 constructor = construct;
                 break;
@@ -46,7 +46,8 @@ public class AnimalService {
             try {
                 result = constructor.newInstance(getParams(clazz));
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
+                System.out.println("Ooops, there's some problem: can't create animals for your island. Please, report this mistake:  " + e);
+                System.exit(0);
             }
         }
         return clazz.cast(result);

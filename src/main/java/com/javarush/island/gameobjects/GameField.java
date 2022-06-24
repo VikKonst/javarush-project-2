@@ -1,9 +1,5 @@
 package com.javarush.island.gameobjects;
 
-import com.javarush.island.species.animals.abstractItems.Animal;
-import com.javarush.island.services.GameService;
-import com.javarush.island.species.plants.Plant;
-
 import java.util.*;
 
 public class GameField {
@@ -56,24 +52,4 @@ public class GameField {
     public void setCells(List<Cell> cells) {
         this.fieldCells = cells;
     }
-
-//
-//
-//    public HashMap<Position, ArrayList<GameObject>> getGameFieldCellsMap() {
-//        return gameFieldCellsMap;
-//    }
-//
-//    public void setGameFieldCellsMap(HashMap<Position, ArrayList<GameObject>> gameFieldCellsMap) {
-//        this.gameFieldCellsMap = gameFieldCellsMap;
-//    }
-
-
-    //    public void checkForFilling() {
-//                Set<Map.Entry<Position, ArrayList<GameObject>>> set = gameFieldCellsMap.entrySet();
-//        for(Map.Entry<Position, ArrayList<GameObject>> cell : set) {
-//            Map<String, Long> counterMap = cell.getValue().stream().collect(Collectors.groupingBy(e -> e.toString(), Collectors.counting()));
-//            System.out.println(cell.getKey().getCoordinates() + " :: " + counterMap);
-//        }
-//        System.out.println("--------------------------");
-//    }
 }

@@ -1,6 +1,6 @@
 package com.javarush.island.services;
 
-import com.javarush.island.annotations.Injectable;;
+import com.javarush.island.annotations.Injectable;
 import com.javarush.island.gameobjects.Cell;
 import com.javarush.island.gameobjects.GameField;
 import com.javarush.island.gameobjects.GameObject;
@@ -25,7 +25,6 @@ public class GameService {
     }
 
     public void fillFieldsWithAnimals() {
-        ExecutorService executorService = Executors.newFixedThreadPool(2);
         List<Cell> oddCells = new ArrayList<>();
         List<Cell> evenCells = new ArrayList<>();
         for (int i = 0; i < GameField.getInstance().getFieldCells().size(); i++) {
@@ -37,37 +36,39 @@ public class GameService {
         }
         List<List<Cell>> cells = List.of(oddCells, evenCells);
         cells.forEach(list -> {
+            ExecutorService executorService = Executors.newFixedThreadPool(2);
             FillCellTask fillCellTask = new FillCellTask(list);
             executorService.submit(fillCellTask);
             try {
+                executorService.shutdown();
                 executorService.awaitTermination(1, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                System.out.println("The work of the program is interrupted. Please, report this mistake: " + e);
             }
         });
     }
 
     public void fillFieldsWithPlants() {
-        GameField.getInstance().getFieldCells().forEach(this :: setPlantsOnGameField);
+        GameField.getInstance().getFieldCells().forEach(this::setPlantsOnGameField);
     }
 
     public void setAnimalsOnGameField(Cell cell) {
         for (int i = 0; i < new Random().nextInt(GameField.MAX_AMOUNT_OF_ANIMALS_IN_CELL); i++) {
-                Animal animal = animalService.createRandomAnimal();
-                if (canGameObjectBeOnField(animal, cell.getObjectsOnCell())) {
-                    cell.getObjectsOnCell().add(animal);
-                }
+            Animal animal = animalService.createRandomAnimal();
+            if (canGameObjectBeOnField(animal, cell.getObjectsOnCell())) {
+                cell.getObjectsOnCell().add(animal);
             }
         }
+    }
 
-        public void setPlantsOnGameField(Cell cell) {
-            for (int i = 0; i < new Random().nextInt(GameField.MAX_AMOUNT_OF_PLANTS_IN_CELL); i++) {
-                Plant plant = plantService.createNewPlant();
-                if (canGameObjectBeOnField(plant, cell.getObjectsOnCell())) {
-                    cell.getObjectsOnCell().add(plant);
-                }
+    public void setPlantsOnGameField(Cell cell) {
+        for (int i = 0; i < new Random().nextInt(GameField.MAX_AMOUNT_OF_PLANTS_IN_CELL); i++) {
+            Plant plant = plantService.createNewPlant();
+            if (canGameObjectBeOnField(plant, cell.getObjectsOnCell())) {
+                cell.getObjectsOnCell().add(plant);
             }
         }
+    }
 
     public boolean canGameObjectBeOnField(GameObject gameObject, List<GameObject> gameObjects) {
         int count = 0;
@@ -147,6 +148,7 @@ public class GameService {
 
     private class FillCellTask implements Runnable {
         private final List<Cell> cells;
+
         public FillCellTask(List<Cell> cells) {
             this.cells = cells;
         }

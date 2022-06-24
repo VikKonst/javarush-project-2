@@ -4,13 +4,11 @@ import com.javarush.island.annotations.Injectable;
 import com.javarush.island.gameobjects.Cell;
 import com.javarush.island.gameobjects.GameField;
 import com.javarush.island.gameobjects.GameObject;
-import com.javarush.island.gameobjects.Position;
 import com.javarush.island.species.animals.abstractItems.Animal;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Injectable
@@ -31,7 +29,7 @@ public class StatisticsService {
         List<GameObject> eatenObjects = new ArrayList<>();
         List<GameObject> diedFromHunger = new ArrayList<>();
         for (Cell cell : GameField.getInstance().getFieldCells()) {
-           List<GameObject> gameObjectsOnCell = cell.getObjectsOnCell();
+            List<GameObject> gameObjectsOnCell = cell.getObjectsOnCell();
             for (GameObject gameObject : gameObjectsOnCell) {
                 if (gameObject.getIsDead()) {
                     eatenObjects.add(gameObject);

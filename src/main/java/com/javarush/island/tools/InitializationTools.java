@@ -1,7 +1,6 @@
 package com.javarush.island.tools;
 
 import com.javarush.island.annotations.Injectable;
-import com.sun.jdi.InvocationException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -20,9 +19,9 @@ public class InitializationTools {
         try {
             instance = constructor.newInstance(parameterTypes);
         } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
-            System.out.println("Can not initialize class " + tClass.getName());
+            System.out.println("Can not initialize class " + tClass.getName() + ". Please, report this mistake " + e);
             throw new RuntimeException();
         }
         return tClass.cast(instance);
     }
- }
+}

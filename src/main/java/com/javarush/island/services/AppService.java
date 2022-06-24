@@ -27,18 +27,10 @@ public class AppService {
         try (InputStream input = classloader.getResourceAsStream("application.properties")) {
             properties.load(input);
         } catch (IOException ex) {
-            System.out.println("Can not load application.properties");
-            ex.printStackTrace();
+            System.out.println("Can not load application.properties. Please, report this mistake " + ex);
+            System.exit(0);
         }
     }
-
-//    public static <T> T getProperty(String property, Class<T> tClass) {
-//        return tClass.cast(properties.getProperty(property));
-//    }
-//
-//    public static String getProperty(String property) {
-//        return properties.getProperty(property);
-//    }
 
     public int getIntProperty(String property) {
         int result = 0;
@@ -48,7 +40,8 @@ public class AppService {
                 return result;
             result = Integer.parseInt(properties.getProperty(property));
         } catch (NumberFormatException e) {
-            System.out.println("Error while getting property " + property.toUpperCase());
+            System.out.println("Error while getting application property " + property.toUpperCase() + ". Please, report this mistake " + e);
+            System.exit(0);
         }
         return result;
     }
@@ -58,7 +51,8 @@ public class AppService {
         try {
             result = Double.parseDouble(properties.getProperty(property));
         } catch (NumberFormatException e) {
-            System.out.println("Error while getting property " + property.toUpperCase());
+            System.out.println("Error while getting application property " + property.toUpperCase() + ". Please, report this mistake " + e);
+            System.exit(0);
         }
         return result;
     }
@@ -85,12 +79,13 @@ public class AppService {
     private Class<? extends Animal> getClass(String className, String packageName) {
         try {
             Class<?> c = Class.forName(packageName + "."
-                        + className.substring(0, className.lastIndexOf('.')));
+                    + className.substring(0, className.lastIndexOf('.')));
             if (Animal.class.isAssignableFrom(c)) {
                 return (Class<? extends Animal>) c;
             }
         } catch (ClassNotFoundException e) {
-            System.out.println("blah");
+            System.out.println("Animal class can not be loaded. Please, report this mistake: " + e);
+            System.exit(0);
         }
         return null;
     }
